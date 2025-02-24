@@ -18,3 +18,7 @@ yarn-error.log*
 
 # Ignore TypeScript build artifacts
 *.tsbuildinfo
+
+#ignore token
+
+token.json
