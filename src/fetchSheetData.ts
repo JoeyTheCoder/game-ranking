@@ -1,27 +1,55 @@
-import axios from "axios";
+import { google } from "googleapis";
+import authenticate from "./authGoogle";
 
-const SHEET_ID = "1aBcDefGhIjKLmnopQrstUvWxYZ"; // Replace with your Sheet ID
-const API_KEY = "YOUR_GOOGLE_SHEETS_API_KEY"; // Replace with your API Key
-const SHEET_NAME = "Sheet1"; // Change if you renamed your sheet
+const SHEET_ID = "1uOusljyQQXZJ-3EqjjOomSB8N8XS-8gd0jnA-Ht73xE";
+const SHEET_NAME = "Ranking!A1:Z1000"; // Ensure this is correct
 
-export const fetchSheetData = async () => {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
+async function fetchSheetData() {
+    console.log("🔹 Starting data fetch...");
 
-  try {
-    const response = await axios.get(url);
-    const rows = response.data.values;
+    try {
+        console.log("🔹 Authenticating with Google API...");
+        const auth = await authenticate();
 
-    if (!rows || rows.length < 2) return [];
+        console.log("✅ Authentication successful, creating Sheets API instance...");
+        const sheets = google.sheets({ version: "v4", auth });
 
-    const headers = rows[0];
-    return rows.slice(1).map((row) =>
-      headers.reduce((acc, header, index) => {
-        acc[header] = row[index] || "";
-        return acc;
-      }, {} as Record<string, string>)
-    );
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    return [];
-  }
-};
+        console.log(`🔹 Fetching data from Google Sheets: ${SHEET_NAME}`);
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID,
+            range: SHEET_NAME,
+        });
+
+        console.log("✅ API Response Received:", response.data); // Debugging
+
+        const rows = response.data.values;
+        if (!rows || rows.length < 2) {
+            console.log("⚠️ No data found or empty response.");
+            return [];
+        }
+
+        // Convert rows into structured JSON
+        const headers = rows[0];
+        const jsonData = rows.slice(1).map((row) =>
+            headers.reduce((acc, header, index) => {
+                acc[header] = row[index] || "";
+                return acc;
+            }, {} as Record<string, string>)
+        );
+
+        console.log("✅ Data fetched successfully:", jsonData.length, "entries.");
+        return jsonData;
+    } catch (error) {
+        console.error("❌ Error fetching data:", error);
+        throw error; // Ensure the error propagates correctly
+    }
+}
+
+// 🚀 Run Fetch for Debugging
+fetchSheetData().then((data) => {
+    console.log("🔹 Final Output:", data.length, "entries.");
+}).catch((error) => {
+    console.error("❌ Script Error:", error);
+});
+
+export default fetchSheetData;

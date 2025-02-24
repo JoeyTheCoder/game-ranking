@@ -1,24 +1,30 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+async function fetchGames() {
+  try {
+      const response = await fetch("http://localhost:3000/games");
+      const games = await response.json();
+      console.log("🔹 Fetched games:", games);
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+      const tableBody = document.getElementById("gameTableBody");
+      if (!tableBody) return;
+      tableBody.innerHTML = "";
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+      games.forEach((game: any) => {
+          const row = document.createElement("tr");
+          row.className = "border-b border-gray-700 hover:bg-gray-700";
+          row.innerHTML = `
+              <td class="p-3">${game["Game Title"] || "Unknown"}</td>
+              <td class="p-3">${game.Platform || "Unknown"}</td>
+              <td class="p-3">${game.Release || "N/A"}</td>
+              <td class="p-3">${game.Rating || "N/A"}</td>
+              <td class="p-3">${game.Beaten || "N/A"}</td>
+              <td class="p-3">${game.Completion || "N/A"}</td>
+              <td class="p-3">${game.Comments || ""}</td>
+          `;
+          tableBody.appendChild(row);
+      });
+  } catch (error) {
+      console.error("❌ Error loading games:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", fetchGames);
