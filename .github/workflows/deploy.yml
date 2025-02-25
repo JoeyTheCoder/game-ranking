@@ -27,7 +27,7 @@ jobs:
       - name: 🔍 Verify Build Output in dist
         run: ls -la dist/
 
-      - name: Debug: List Repository Structure
+      - name: "Debug: List Repository Structure"
         run: find . -maxdepth 2
 
       - name: 📤 Deploy Backend & Frontend to Server
