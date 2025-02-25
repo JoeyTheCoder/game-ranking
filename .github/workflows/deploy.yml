@@ -24,8 +24,11 @@ jobs:
       - name: 🔨 Build Frontend
         run: npm run build
 
-      - name: 🔍 Verify Build Output
+      - name: 🔍 Verify Build Output in dist
         run: ls -la dist/
+
+      - name: Debug: List Repository Structure
+        run: find . -maxdepth 2
 
       - name: 📤 Deploy Backend & Frontend to Server
         uses: appleboy/scp-action@v0.1.4
@@ -36,7 +39,7 @@ jobs:
           source: "dist server.ts package.json package-lock.json"
           target: "/var/www/game-ratings.sapphirix.ch/game-ranking"
           rm: false  # Don't remove the target folder to prevent errors
-          overwrite: true # Ensure files are replaced properly
+          overwrite: true  # Ensure files are replaced properly
 
       - name: 🖥️ Connect to Server & Restart Backend API
         uses: appleboy/ssh-action@v0.1.8
