@@ -24,39 +24,25 @@ jobs:
       - name: 🔨 Build Frontend
         run: npm run build
 
-      - name: 🔍 Verify Build Output in dist
+      - name: 🔍 Verify Build Output
         run: ls -la dist/
 
-      - name: "Debug: List Repository Structure"
-        run: find . -maxdepth 2
+      - name: 🚚 Deploy Files to Server
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        run: |
+          echo "${SERVER_SSH_KEY}" > key.pem
+          chmod 600 key.pem
+          scp -o StrictHostKeyChecking=no -i key.pem -r dist server.ts package.json package-lock.json ${SERVER_USER}@${SERVER_IP}:/var/www/game-ratings.sapphirix.ch/game-ranking
 
-      - name: 📤 Deploy Backend & Frontend to Server
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: |
-            dist
-            server.ts
-            package.json
-            package-lock.json
-          target: "/var/www/game-ratings.sapphirix.ch/game-ranking"
-          rm: false  # Don't remove the target folder to prevent errors
-          overwrite: true  # Ensure files are replaced properly
-
-      - name: 🖥️ Connect to Server & Restart Backend API
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            echo "🔄 Navigating to project folder..."
-            cd /var/www/game-ratings.sapphirix.ch/game-ranking
-
-            echo "📦 Installing backend dependencies..."
-            npm install --production
-
-            echo "🔄 Restarting backend with PM2..."
-            pm2 restart game-backend || pm2 start server.ts --name game-backend --interpreter tsx --max-memory-restart 200M
+      - name: 🔄 Restart Backend on Server
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        run: |
+          echo "${SERVER_SSH_KEY}" > key.pem
+          chmod 600 key.pem
+          ssh -o StrictHostKeyChecking=no -i key.pem ${SERVER_USER}@${SERVER_IP} "cd /var/www/game-ratings.sapphirix.ch/game-ranking && npm install --production && pm2 restart game-backend || pm2 start server.ts --name game-backend --interpreter tsx --max-memory-restart 200M"
