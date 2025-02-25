@@ -1,0 +1,45 @@
+name: Deploy to Ubuntu Server
+
+on:
+  push:
+    branches:
+      - master  # Runs on every push to the master branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 📦 Install Dependencies
+        run: npm install
+
+      - name: 🔨 Build Frontend
+        run: npm run build
+
+      - name: 📤 Deploy Backend & Frontend to Server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "dist/ server.ts package.json package-lock.json"
+          target: "/var/www/game-ratings.sapphirix.ch/game-ranking"
+
+      - name: 🔄 Restart Backend API
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/game-ratings.sapphirix.ch/game-ranking
+            npm install --production
+            pm2 restart game-backend || pm2 start server.ts --name game-backend --interpreter tsx --max-memory-restart 200M
