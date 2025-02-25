@@ -35,7 +35,7 @@ jobs:
         run: |
           echo "${SERVER_SSH_KEY}" > key.pem
           chmod 600 key.pem
-          scp -o StrictHostKeyChecking=no -i key.pem -r dist server.ts package.json package-lock.json ${SERVER_USER}@${SERVER_IP}:/var/www/game-ratings.sapphirix.ch/game-ranking
+          scp -o StrictHostKeyChecking=no -i key.pem -r dist src server.ts package.json package-lock.json ${SERVER_USER}@${SERVER_IP}:/var/www/game-ratings.sapphirix.ch/game-ranking
 
       - name: 🔄 Restart Backend on Server
         env:
