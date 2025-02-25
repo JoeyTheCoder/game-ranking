@@ -1,42 +1,34 @@
-import express from "express";
-import cors from "cors";
-import fetchSheetData from "./src/fetchSheetData";
-import dotenv from "dotenv";
-
-// Load environment variables
-dotenv.config();
-
-const app = express();
-const PORT = process.env.PORT || 3001;
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173"; // Change for your frontend
-
-// Enable CORS for frontend access
-app.use(
-    cors({
-        origin: FRONTEND_ORIGIN,
-        methods: ["GET"],
-        allowedHeaders: ["Content-Type"],
-    })
-);
-
-// Test route to check if the server is running
-app.get("/", (req, res) => {
-    res.send("✅ Server is running! Use /games to get rankings.");
-});
-
-// Fetch game rankings from Google Sheets
-app.get("/games", async (req, res) => {
+async function fetchGames() {
     try {
-        console.log("🔹 Fetching game rankings...");
-        const data = await fetchSheetData();
-        res.json(data);
-    } catch (error) {
-        console.error("❌ Server Error:", error);
-        res.status(500).json({ error: "Failed to fetch game data" });
-    }
-});
+        // Use environment variable for API base URL
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+        
+        const response = await fetch(`${API_BASE_URL}/games`);
+        const games = await response.json();
+        console.log("🔹 Fetched games:", games);
 
-// Start the server
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
+        const tableBody = document.getElementById("gameTableBody");
+        if (!tableBody) return;
+        tableBody.innerHTML = "";
+
+        games.forEach((game: any) => {
+            const row = document.createElement("tr");
+            row.className = "border-b border-gray-700 hover:bg-gray-700";
+            row.innerHTML = `
+                <td class="p-3">${game["Game Title"] || "Unknown"}</td>
+                <td class="p-3">${game.Platform || "Unknown"}</td>
+                <td class="p-3">${game.Release || "N/A"}</td>
+                <td class="p-3">${game.Rating || "N/A"}</td>
+                <td class="p-3">${game.Beaten || "N/A"}</td>
+                <td class="p-3">${game.Completion || "N/A"}</td>
+                <td class="p-3">${game.Comments || ""}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error("❌ Error loading games:", error);
+    }
+}
+
+// Load data once the page is fully loaded
+document.addEventListener("DOMContentLoaded", fetchGames);
