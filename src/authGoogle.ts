@@ -1,4 +1,5 @@
 import { google } from "googleapis";
+import { Credentials } from "google-auth-library"; // ✅ Import Credentials
 import readline from "readline";
 import fs from "fs";
 import path from "path";
@@ -11,9 +12,7 @@ const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
 const REDIRECT_URI = "http://localhost:3000"; // Ensure this matches your Google Cloud Console settings
 
-const __filename = import.meta.url.replace("file://", "");
-const __dirname = path.dirname(__filename);
-const TOKEN_PATH = path.resolve("token.json"); // Ensures it's saved in the project root
+const TOKEN_PATH = path.resolve("token.json"); // ✅ Removed unused `__dirname`
 
 console.log("🔹 OAuth2 client being created...");
 const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
@@ -62,13 +61,13 @@ async function authenticate() {
         if (fs.existsSync(TOKEN_PATH)) {
             console.log(`🔹 Found token file at ${TOKEN_PATH}`);
             const token = JSON.parse(fs.readFileSync(TOKEN_PATH, "utf8"));
-            oAuth2Client.setCredentials(token);
+            oAuth2Client.setCredentials(token as Credentials); // ✅ Explicitly cast `token` to Credentials
             console.log("✅ Using existing token.");
             return oAuth2Client;
         } else {
             console.log("⚠️ No token found. Requesting a new one...");
             const newToken = await getAccessToken();
-            oAuth2Client.setCredentials(newToken);
+            oAuth2Client.setCredentials(newToken as Credentials); // ✅ Explicitly cast `newToken` to Credentials
             console.log("✅ New token acquired.");
             return oAuth2Client;
         }
@@ -89,4 +88,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 export default authenticate;
-
