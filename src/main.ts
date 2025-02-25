@@ -1,30 +1,42 @@
-async function fetchGames() {
-  try {
-      const response = await fetch("http://localhost:3001/games");
-      const games = await response.json();
-      console.log("🔹 Fetched games:", games);
+import express from "express";
+import cors from "cors";
+import fetchSheetData from "./src/fetchSheetData";
+import dotenv from "dotenv";
 
-      const tableBody = document.getElementById("gameTableBody");
-      if (!tableBody) return;
-      tableBody.innerHTML = "";
+// Load environment variables
+dotenv.config();
 
-      games.forEach((game: any) => {
-          const row = document.createElement("tr");
-          row.className = "border-b border-gray-700 hover:bg-gray-700";
-          row.innerHTML = `
-              <td class="p-3">${game["Game Title"] || "Unknown"}</td>
-              <td class="p-3">${game.Platform || "Unknown"}</td>
-              <td class="p-3">${game.Release || "N/A"}</td>
-              <td class="p-3">${game.Rating || "N/A"}</td>
-              <td class="p-3">${game.Beaten || "N/A"}</td>
-              <td class="p-3">${game.Completion || "N/A"}</td>
-              <td class="p-3">${game.Comments || ""}</td>
-          `;
-          tableBody.appendChild(row);
-      });
-  } catch (error) {
-      console.error("❌ Error loading games:", error);
-  }
-}
+const app = express();
+const PORT = process.env.PORT || 3001;
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173"; // Change for your frontend
 
-document.addEventListener("DOMContentLoaded", fetchGames);
+// Enable CORS for frontend access
+app.use(
+    cors({
+        origin: FRONTEND_ORIGIN,
+        methods: ["GET"],
+        allowedHeaders: ["Content-Type"],
+    })
+);
+
+// Test route to check if the server is running
+app.get("/", (req, res) => {
+    res.send("✅ Server is running! Use /games to get rankings.");
+});
+
+// Fetch game rankings from Google Sheets
+app.get("/games", async (req, res) => {
+    try {
+        console.log("🔹 Fetching game rankings...");
+        const data = await fetchSheetData();
+        res.json(data);
+    } catch (error) {
+        console.error("❌ Server Error:", error);
+        res.status(500).json({ error: "Failed to fetch game data" });
+    }
+});
+
+// Start the server
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Server running at http://localhost:${PORT}`);
+});
