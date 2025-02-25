@@ -1,5 +1,4 @@
 import { google } from "googleapis";
-import open from "open";
 import readline from "readline";
 import fs from "fs";
 import path from "path";
@@ -26,15 +25,8 @@ async function getAccessToken() {
         scope: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
     });
 
-    console.log("🔹 Open this URL in your browser manually if it doesn't open automatically:");
+    console.log("🔹 Copy and paste this URL into your browser:");
     console.log(authUrl);
-
-    try {
-        await open(authUrl);
-        console.log("✅ Browser opened. If it didn't open, copy-paste the URL manually.");
-    } catch (error) {
-        console.log("❌ Failed to open browser automatically. Copy and paste the URL manually.");
-    }
 
     const rl = readline.createInterface({
         input: process.stdin,
@@ -85,5 +77,16 @@ async function authenticate() {
     }
 }
 
-// 🚀 Ensure the default export is set
+// 🚀 Ensure the script runs when executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+    authenticate().then(() => {
+        console.log("🔹 Authentication complete. You can now run your app.");
+        process.exit(0);
+    }).catch(error => {
+        console.error("❌ Authentication failed:", error);
+        process.exit(1);
+    });
+}
+
 export default authenticate;
+
