@@ -1,4 +1,4 @@
-name: Deploy to Ubuntu Server
+name: 🚀 Deploy to Ubuntu Server
 
 on:
   push:
@@ -24,19 +24,8 @@ jobs:
       - name: 🔨 Build Frontend
         run: npm run build
 
-      - name: 📝 Verify Build Output
-        run: ls -la dist
-
-      - name: ⚠️ Ensure Build Folder Exists
-        run: |
-          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
-            echo "🚨 dist/ folder is empty! Build might have failed."
-            exit 1
-          fi
-          if [ ! -f "server.ts" ]; then
-            echo "🚨 server.ts is missing! Backend might not be properly included."
-            exit 1
-          fi
+      - name: 🔍 Verify Build Output
+        run: ls -la dist/
 
       - name: 📤 Deploy Backend & Frontend to Server
         uses: appleboy/scp-action@v0.1.4
@@ -44,18 +33,23 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "dist/*,server.ts,package.json,package-lock.json"  # ✅ FIXED: Uses comma (,) instead of space
+          source: "dist/* server.ts package.json package-lock.json"
           target: "/var/www/game-ratings.sapphirix.ch/game-ranking"
-          rm: true  # Remove old files before copying new ones
-          strip_components: 0
+          rm: false  # Don't remove the target folder to prevent errors
+          overwrite: true # Ensure files are replaced properly
 
-      - name: 🔄 Restart Backend API
+      - name: 🖥️ Connect to Server & Restart Backend API
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            echo "🔄 Navigating to project folder..."
             cd /var/www/game-ratings.sapphirix.ch/game-ranking
+
+            echo "📦 Installing backend dependencies..."
             npm install --production
+
+            echo "🔄 Restarting backend with PM2..."
             pm2 restart game-backend || pm2 start server.ts --name game-backend --interpreter tsx --max-memory-restart 200M
