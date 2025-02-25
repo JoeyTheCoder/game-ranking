@@ -30,7 +30,7 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "dist/ server.ts package.json package-lock.json"
+          source: "dist/* server.ts package.json package-lock.json"
           target: "/var/www/game-ratings.sapphirix.ch/game-ranking"
 
       - name: 🔄 Restart Backend API
