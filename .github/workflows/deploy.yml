@@ -27,10 +27,14 @@ jobs:
       - name: 📝 Verify Build Output
         run: ls -la dist
 
-      - name: ⚠️ Prevent Empty Archive Error
+      - name: ⚠️ Ensure Build Folder Exists
         run: |
           if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
             echo "🚨 dist/ folder is empty! Build might have failed."
+            exit 1
+          fi
+          if [ ! -f "server.ts" ]; then
+            echo "🚨 server.ts is missing! Backend might not be properly included."
             exit 1
           fi
 
@@ -40,9 +44,10 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "dist/* server.ts package.json package-lock.json"  # ✅ FIXED: Ensures only necessary files are copied
+          source: "dist/*,server.ts,package.json,package-lock.json"  # ✅ FIXED: Uses comma (,) instead of space
           target: "/var/www/game-ratings.sapphirix.ch/game-ranking"
           rm: true  # Remove old files before copying new ones
+          strip_components: 0
 
       - name: 🔄 Restart Backend API
         uses: appleboy/ssh-action@v0.1.8
