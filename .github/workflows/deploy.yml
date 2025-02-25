@@ -25,7 +25,14 @@ jobs:
         run: npm run build
 
       - name: 📝 Verify Build Output
-        run: ls -la dist  # ✅ Checks if dist/ actually exists
+        run: ls -la dist
+
+      - name: ⚠️ Prevent Empty Archive Error
+        run: |
+          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
+            echo "🚨 dist/ folder is empty! Build might have failed."
+            exit 1
+          fi
 
       - name: 📤 Deploy Backend & Frontend to Server
         uses: appleboy/scp-action@v0.1.4
@@ -35,6 +42,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: "dist/* server.ts package.json package-lock.json"  # ✅ FIXED: Ensures only necessary files are copied
           target: "/var/www/game-ratings.sapphirix.ch/game-ranking"
+          rm: true  # Remove old files before copying new ones
 
       - name: 🔄 Restart Backend API
         uses: appleboy/ssh-action@v0.1.8
