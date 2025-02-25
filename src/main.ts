@@ -1,7 +1,7 @@
 async function fetchGames() {
     try {
         // Use environment variable for API base URL
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://game-ratings.sapphirix.ch/api/games";
         
         const response = await fetch(`${API_BASE_URL}/games`);
         const games = await response.json();
