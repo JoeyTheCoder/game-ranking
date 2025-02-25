@@ -3,7 +3,7 @@ import cors from "cors";
 import fetchSheetData from "./src/fetchSheetData";
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 
 // Enable CORS for frontend access
 app.use(cors());

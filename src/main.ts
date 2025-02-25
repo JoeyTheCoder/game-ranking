@@ -1,6 +1,6 @@
 async function fetchGames() {
   try {
-      const response = await fetch("http://localhost:3000/games");
+      const response = await fetch("http://localhost:3001/games");
       const games = await response.json();
       console.log("🔹 Fetched games:", games);
 
