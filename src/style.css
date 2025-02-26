@@ -1,1 +1,29 @@
 @import "tailwindcss";
+
+/* Custom Styling */
+body {
+    font-family: 'Arial', sans-serif;
+}
+
+/* Table Styling */
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #1f2937;
+    font-weight: bold;
+}
+
+/* Responsive Table */
+@media (max-width: 768px) {
+    .hidden.md\:table-cell {
+        display: none;
+    }
+}
