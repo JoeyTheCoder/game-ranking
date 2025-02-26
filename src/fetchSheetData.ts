@@ -1,4 +1,4 @@
-import { google } from "googleapis";
+import { google, sheets_v4 } from "googleapis";
 import authenticate from "./authGoogle";
 
 const SHEET_ID = "1uOusljyQQXZJ-3EqjjOomSB8N8XS-8gd0jnA-Ht73xE";
@@ -9,10 +9,14 @@ async function fetchSheetData() {
 
     try {
         console.log("🔹 Authenticating with Google API...");
-        const auth = await authenticate();
+        const auth = await authenticate(); // This returns an unknown type
+
+        if (!(auth instanceof google.auth.OAuth2)) {
+            throw new Error("Invalid authentication client.");
+        }
 
         console.log("✅ Authentication successful, creating Sheets API instance...");
-        const sheets = google.sheets({ version: "v4", auth });
+        const sheets: sheets_v4.Sheets = google.sheets({ version: "v4", auth }); // ✅ Fix: Explicitly define type
 
         console.log(`🔹 Fetching data from Google Sheets: ${SHEET_NAME}`);
         const response = await sheets.spreadsheets.values.get({
@@ -20,7 +24,7 @@ async function fetchSheetData() {
             range: SHEET_NAME,
         });
 
-        console.log("✅ API Response Received:", response.data); // Debugging
+        console.log("✅ API Response Received:", response.data);
 
         const rows = response.data.values;
         if (!rows || rows.length < 2) {
@@ -41,15 +45,8 @@ async function fetchSheetData() {
         return jsonData;
     } catch (error) {
         console.error("❌ Error fetching data:", error);
-        throw error; // Ensure the error propagates correctly
+        throw error;
     }
 }
-
-// 🚀 Run Fetch for Debugging
-fetchSheetData().then((data) => {
-    console.log("🔹 Final Output:", data.length, "entries.");
-}).catch((error) => {
-    console.error("❌ Script Error:", error);
-});
 
 export default fetchSheetData;
