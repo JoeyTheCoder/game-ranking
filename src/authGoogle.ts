@@ -16,6 +16,47 @@ const TOKEN_PATH = path.resolve("token.json"); // Ensures it's saved in the proj
 console.log("🔹 OAuth2 client being created...");
 const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
+// Listen for token refresh events and save new tokens automatically
+oAuth2Client.on("tokens", (tokens) => {
+    if (tokens.refresh_token) {
+        // Persist the new refresh token
+        fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens, null, 2));
+        console.log("🔹 New refresh token saved:", tokens.refresh_token);
+    }
+    console.log("🔹 New access token received:", tokens.access_token);
+});
+
+/**
+ * Schedule automatic token refresh before the current token expires.
+ */
+function scheduleAutoRefresh(client: any) {
+    const tokenData = client.credentials;
+    if (!tokenData.expiry_date) {
+        console.log("⚠️ No expiry date in token, cannot schedule auto refresh.");
+        return;
+    }
+    // Refresh 5 minutes before token expiry
+    const refreshBuffer = 5 * 60 * 1000;
+    const refreshTime = tokenData.expiry_date - Date.now() - refreshBuffer;
+
+    if (refreshTime <= 0) {
+        console.log("⚠️ Token is expiring soon or expired, refreshing now...");
+        refreshAccessToken()
+            .then(() => scheduleAutoRefresh(client))
+            .catch((err) => console.error("❌ Error during scheduled refresh:", err));
+    } else {
+        console.log(`🔄 Scheduling token refresh in ${(refreshTime / 1000).toFixed(0)} seconds.`);
+        setTimeout(async () => {
+            try {
+                await refreshAccessToken();
+                scheduleAutoRefresh(client); // Schedule next refresh after update
+            } catch (error) {
+                console.error("❌ Error during scheduled token refresh:", error);
+            }
+        }, refreshTime);
+    }
+}
+
 /**
  * Request a new access token from Google API by prompting user.
  */
@@ -29,7 +70,7 @@ async function getAccessToken() {
 
     console.log("🔹 Open this URL in your browser and authenticate:", authUrl);
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout,
@@ -50,9 +91,12 @@ async function getAccessToken() {
                 console.log(`✅ Token saved to ${TOKEN_PATH}`);
 
                 oAuth2Client.setCredentials(tokens);
+                // Schedule auto refresh for the new token
+                scheduleAutoRefresh(oAuth2Client);
                 resolve(oAuth2Client);
             } catch (error) {
                 console.error("❌ Error getting access token:", error);
+                reject(error);
             }
         });
     });
@@ -98,7 +142,8 @@ async function authenticate() {
 
             if (!tokenData.access_token) {
                 console.log("⚠️ No access token found, requesting a new one...");
-                return await getAccessToken();
+                const client = await getAccessToken();
+                return client;
             }
 
             oAuth2Client.setCredentials(tokenData);
@@ -106,17 +151,22 @@ async function authenticate() {
             // Check if access token is expired
             if (Date.now() >= tokenData.expiry_date) {
                 console.log("⚠️ Access token expired. Refreshing...");
-                return await refreshAccessToken();
+                const client = await refreshAccessToken();
+                scheduleAutoRefresh(client);
+                return client;
             }
 
             console.log("✅ Using existing valid token.");
+            scheduleAutoRefresh(oAuth2Client);
             return oAuth2Client;
         } else {
             console.log("⚠️ No token found. Requesting a new one...");
-            return await getAccessToken();
+            const client = await getAccessToken();
+            return client;
         }
     } catch (error) {
         console.error("❌ Error reading token file:", error);
+        throw error;
     }
 }
 
