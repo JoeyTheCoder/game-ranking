@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Rankings</title>
+    <link rel="stylesheet" href="/src/style.css">
+    <style>
+        .icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-gray-800 py-4 shadow-md">
+        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+            <a href="#" class="text-xl font-bold text-white">Game Ratings</a>
+            <ul class="flex space-x-4">
+                <li><a href="#" class="text-gray-300 hover:text-white">aRogueOne Rankings</a></li>
+                <li><a href="pages/ranked.html" class="text-gray-300 hover:text-white">Sapphirix Rankings</a></li>
+                <li><a href="#" class="text-gray-300 hover:text-white">About</a></li>
+                <li><a href="#" class="text-gray-300 hover:text-white">Support</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        <div class="max-w-6xl mx-auto p-6">
+            <h1 class="text-3xl font-bold text-center mb-6">Competitive Achievements by Sapphirix</h1>
+            
+            <!-- Rankings Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse border border-gray-700">
+                    <thead>
+                        <tr class="bg-gray-800">
+                            <th class="border border-gray-700 p-3">Game</th>
+                            <th class="border border-gray-700 p-3">Started Playing</th>
+                            <th class="border border-gray-700 p-3">Peak Rank</th>
+                            <th class="border border-gray-700 p-3">Top %</th>
+                            <th class="border border-gray-700 p-3">Hours</th>
+                            <th class="border border-gray-700 p-3">Mode</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-gray-900">
+                            <td class="border border-gray-700 p-3 flex items-center">
+                                <img src="../src/img/league.png" alt="LoL" class="icon"> League of Legends
+                            </td>
+                            <td class="border border-gray-700 p-3">2014</td>
+                            <td class="border border-gray-700 p-3 flex items-center">
+                                <img src="../src/img/emerald.png" alt="Emerald 3" class="icon"> Emerald 3
+                            </td>
+                            <td class="border border-gray-700 p-3">Top 8.4%</td>
+                            <td class="border border-gray-700 p-3">3164</td>
+                            <td class="border border-gray-700 p-3">Ranked Flex</td>
+                        </tr>
+                        <tr class="bg-gray-800">
+                            <td class="border border-gray-700 p-3 flex items-center">
+                                <img src="../src/img/valo.png" alt="Valorant" class="icon"> Valorant
+                            </td>
+                            <td class="border border-gray-700 p-3">2020</td>
+                            <td class="border border-gray-700 p-3 flex items-center">
+                                <img src="../src/img/plat2.png" alt="Platinum 2" class="icon"> Platinum 2
+                            </td>
+                            <td class="border border-gray-700 p-3">Top 15%</td>
+                            <td class="border border-gray-700 p-3">451</td>
+                            <td class="border border-gray-700 p-3">Ranked</td>
+                        </tr>
+                        <tr class="bg-gray-900">
+                            <td class="border border-gray-700 p-3 flex items-center">
+                                <img src="../src/img/rocket.png" alt="Rocket League" class="icon"> Rocket League
+                            </td>
+                            <td class="border border-gray-700 p-3">2024</td>
+                            <td class="border border-gray-700 p-3 flex items-center">
+                                <img src="../src/img/dia1.png" alt="Diamond 1" class="icon"> Diamond 1
+                            </td>
+                            <td class="border border-gray-700 p-3">Top 20%</td>
+                            <td class="border border-gray-700 p-3">105</td>
+                            <td class="border border-gray-700 p-3">Doubles</td>
+                        </tr>
+                        <tr class="bg-gray-800">
+                            <td class="border border-gray-700 p-3 flex items-center">
+                                <img src="../src/img/csgo.png" alt="CS:GO" class="icon"> CS-GO
+                            </td>
+                            <td class="border border-gray-700 p-3">2019</td>
+                            <td class="border border-gray-700 p-3 flex items-center">
+                                <img src="../src/img/goldnova.png" alt="Gold Nova Master" class="icon"> Gold Nova Master
+                            </td>
+                            <td class="border border-gray-700 p-3">Top 8.08%</td>
+                            <td class="border border-gray-700 p-3">390</td>
+                            <td class="border border-gray-700 p-3">Ranked</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-4 mt-8">
+        <div class="max-w-6xl mx-auto text-center text-gray-400">
+            <p>&copy; 2025 Game Rankings. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
