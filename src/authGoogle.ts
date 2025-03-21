@@ -1,71 +1,77 @@
 import { google } from "googleapis";
-import readline from "readline";
-import fs from "fs";
-import path from "path";
-import dotenv from "dotenv";
+import * as fs from "fs";
+import * as path from "path";
+import * as readline from "readline";
+import * as dotenv from "dotenv";
 
 // Load environment variables from `.env`
 dotenv.config();
 
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
-const REDIRECT_URI = "http://localhost:3000"; // Ensure this matches your Google Cloud Console settings
+// File paths
+const CREDENTIALS_PATH = path.join(process.cwd(), "credentials.json");
+const TOKEN_PATH = path.join(process.cwd(), "token.json");
 
-const TOKEN_PATH = path.resolve("token.json"); // Ensures it's saved in the project root
-
-console.log("🔹 OAuth2 client being created...");
-const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-
-// Listen for token refresh events and save new tokens automatically
-oAuth2Client.on("tokens", (tokens) => {
-    if (tokens.refresh_token) {
-        // Persist the new refresh token
-        fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens, null, 2));
-        console.log("🔹 New refresh token saved:", tokens.refresh_token);
+// OAuth2 client setup
+const oAuth2Client = (() => {
+    try {
+        const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, "utf8"));
+        const { client_secret, client_id, redirect_uris } = credentials.installed || credentials.web;
+        return new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+    } catch (error) {
+        console.error("❌ Error loading client credentials:", error);
+        throw new Error("Failed to create OAuth2 client. Check your credentials.json file.");
     }
-    console.log("🔹 New access token received:", tokens.access_token);
-});
+})();
 
 /**
- * Schedule automatic token refresh before the current token expires.
+ * Main authentication function that handles token refresh and initial auth
  */
-function scheduleAutoRefresh(client: any) {
-    const tokenData = client.credentials;
-    if (!tokenData.expiry_date) {
-        console.log("⚠️ No expiry date in token, cannot schedule auto refresh.");
-        return;
-    }
-    // Refresh 5 minutes before token expiry
-    const refreshBuffer = 5 * 60 * 1000;
-    const refreshTime = tokenData.expiry_date - Date.now() - refreshBuffer;
-
-    if (refreshTime <= 0) {
-        console.log("⚠️ Token is expiring soon or expired, refreshing now...");
-        refreshAccessToken()
-            .then(() => scheduleAutoRefresh(client))
-            .catch((err) => console.error("❌ Error during scheduled refresh:", err));
-    } else {
-        console.log(`🔄 Scheduling token refresh in ${(refreshTime / 1000).toFixed(0)} seconds.`);
-        setTimeout(async () => {
-            try {
+export default async function authenticate() {
+    console.log("🔹 Authentication process starting...");
+    
+    try {
+        // Check if we have a token already
+        if (fs.existsSync(TOKEN_PATH)) {
+            console.log("🔹 Loading saved token...");
+            const token = JSON.parse(fs.readFileSync(TOKEN_PATH, "utf8"));
+            oAuth2Client.setCredentials(token);
+            
+            // Check if token needs refresh (if it expires within 10 minutes)
+            const tokenExpiryDate = oAuth2Client.credentials.expiry_date;
+            const TEN_MINUTES = 10 * 60 * 1000;
+            
+            if (tokenExpiryDate && Date.now() + TEN_MINUTES >= tokenExpiryDate) {
+                console.log("🔄 Token expiring soon, refreshing...");
                 await refreshAccessToken();
-                scheduleAutoRefresh(client); // Schedule next refresh after update
-            } catch (error) {
-                console.error("❌ Error during scheduled token refresh:", error);
+            } else {
+                console.log("✅ Token is valid");
             }
-        }, refreshTime);
+        } else {
+            console.log("🔹 No token found, starting new authentication flow...");
+            await getNewToken();
+        }
+        
+        return oAuth2Client;
+    } catch (error) {
+        console.error("❌ Authentication error:", error);
+        // If refresh token is invalid, start a new auth flow
+        if (error.message?.includes("invalid_grant")) {
+            console.log("🔄 Invalid refresh token, starting new authentication...");
+            return getNewToken();
+        }
+        throw error;
     }
 }
 
 /**
- * Request a new access token from Google API by prompting user.
+ * Get a new OAuth2 token by prompting the user
  */
-async function getAccessToken() {
+async function getNewToken() {
     console.log("🔹 Generating Google authentication URL...");
     const authUrl = oAuth2Client.generateAuthUrl({
         access_type: "offline",
         scope: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
-        prompt: "consent", // Ensures refresh token is generated
+        prompt: "consent" // Force prompt to ensure we get a refresh token
     });
 
     console.log("🔹 Open this URL in your browser and authenticate:", authUrl);
@@ -80,19 +86,16 @@ async function getAccessToken() {
             rl.close();
             try {
                 console.log("🔹 Received code:", code);
-                const tokenResponse = await oAuth2Client.getToken(code);
-                const tokens = tokenResponse.tokens;
-
+                const { tokens } = await oAuth2Client.getToken(code);
+                
                 if (!tokens.refresh_token) {
-                    throw new Error("❌ No refresh token received. Ensure you are using 'access_type: offline' in your OAuth2 settings.");
+                    throw new Error("❌ No refresh token received. Ensure 'prompt: consent' is set.");
                 }
-
+                
+                // Save token and set credentials
                 fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens, null, 2));
                 console.log(`✅ Token saved to ${TOKEN_PATH}`);
-
                 oAuth2Client.setCredentials(tokens);
-                // Schedule auto refresh for the new token
-                scheduleAutoRefresh(oAuth2Client);
                 resolve(oAuth2Client);
             } catch (error) {
                 console.error("❌ Error getting access token:", error);
@@ -103,72 +106,39 @@ async function getAccessToken() {
 }
 
 /**
- * Refresh the access token using the stored refresh token.
+ * Refresh the access token using the refresh token
  */
 async function refreshAccessToken() {
     try {
         console.log("🔄 Refreshing access token...");
-
-        const tokenData = JSON.parse(fs.readFileSync(TOKEN_PATH, "utf8"));
-        if (!tokenData.refresh_token) {
-            throw new Error("❌ No refresh token available. Please reauthenticate.");
-        }
-
-        oAuth2Client.setCredentials(tokenData);
-        const refreshedTokenResponse = await oAuth2Client.refreshAccessToken();
-        const refreshedTokens = refreshedTokenResponse.credentials;
-
-        fs.writeFileSync(TOKEN_PATH, JSON.stringify(refreshedTokens, null, 2));
-        console.log("✅ Token refreshed and saved.");
-
-        oAuth2Client.setCredentials(refreshedTokens);
+        const { credentials } = await oAuth2Client.refreshAccessToken();
+        oAuth2Client.setCredentials(credentials);
+        
+        // Save the updated token
+        fs.writeFileSync(TOKEN_PATH, JSON.stringify(credentials, null, 2));
+        console.log("✅ Token refreshed and saved");
         return oAuth2Client;
     } catch (error) {
-        console.error("❌ Error refreshing token:", error);
+        console.error("❌ Error refreshing access token:", error);
         throw error;
     }
 }
 
-/**
- * Authenticate the user by checking existing token or generating a new one.
- */
-async function authenticate() {
-    console.log("🔹 Checking for existing token...");
-
-    try {
-        if (fs.existsSync(TOKEN_PATH)) {
-            console.log(`🔹 Found token file at ${TOKEN_PATH}`);
-            const tokenData = JSON.parse(fs.readFileSync(TOKEN_PATH, "utf8"));
-
-            if (!tokenData.access_token) {
-                console.log("⚠️ No access token found, requesting a new one...");
-                const client = await getAccessToken();
-                return client;
-            }
-
-            oAuth2Client.setCredentials(tokenData);
-
-            // Check if access token is expired
-            if (Date.now() >= tokenData.expiry_date) {
-                console.log("⚠️ Access token expired. Refreshing...");
-                const client = await refreshAccessToken();
-                scheduleAutoRefresh(client);
-                return client;
-            }
-
-            console.log("✅ Using existing valid token.");
-            scheduleAutoRefresh(oAuth2Client);
-            return oAuth2Client;
-        } else {
-            console.log("⚠️ No token found. Requesting a new one...");
-            const client = await getAccessToken();
-            return client;
-        }
-    } catch (error) {
-        console.error("❌ Error reading token file:", error);
-        throw error;
+// Register token update handler
+oAuth2Client.on("tokens", (tokens) => {
+    console.log("🔹 Token event received");
+    if (tokens.refresh_token) {
+        console.log("🔹 New refresh token received, updating stored token");
+        
+        // Read existing tokens and merge
+        const existingTokens = fs.existsSync(TOKEN_PATH) 
+            ? JSON.parse(fs.readFileSync(TOKEN_PATH, "utf8")) 
+            : {};
+            
+        const updatedTokens = { ...existingTokens, ...tokens };
+        fs.writeFileSync(TOKEN_PATH, JSON.stringify(updatedTokens, null, 2));
     }
-}
+});
 
 // 🚀 Ensure the script runs when executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -182,5 +152,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             process.exit(1);
         });
 }
-
-export default authenticate;
