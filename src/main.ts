@@ -1,7 +1,7 @@
 import './style.css';
 import { Game } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3014';
 
 // DOM elements
 const gamesList = document.getElementById('gamesList') as HTMLDivElement;
