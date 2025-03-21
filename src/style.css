@@ -66,3 +66,47 @@ th {
         display: none;
     }
 }
+/* In style.css - temporary fix */
+.bg-dark-2 {
+    background-color: #252526;
+  }
+  
+  .bg-dark-3 {
+    background-color: #2D2D2F;
+  }
+  
+  .bg-dark-4 {
+    background-color: #3E3E42;
+  }
+  
+  .bg-dark-1 {
+    background-color: #1F1F1F;
+  }
+  
+  .bg-deep-blue {
+    background-color: #003175;
+  }
+  
+  .bg-gold {
+    background-color: #9D8248;
+  }
+  
+  .bg-bright-red {
+    background-color: #F00000;
+  }
+  
+  .bg-dark-red {
+    background-color: #DB0000;
+  }
+  
+  .border-gold {
+    border-color: #9D8248;
+  }
+  
+  .border-dark-4 {
+    border-color: #3E3E42;
+  }
+  
+  .border-dark-3 {
+    border-color: #2D2D2F;
+  }
