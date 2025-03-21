@@ -1,7 +1,11 @@
 import './style.css';
 import { Game } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3014';
+// Use production API for local development
+const API_BASE_URL = 'https://game-ratings.sapphirix.ch/api';
+
+// Comment out the original line while developing
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3014';
 
 // DOM elements
 const gamesList = document.getElementById('gamesList') as HTMLDivElement;
