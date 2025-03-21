@@ -45,4 +45,4 @@ jobs:
         run: |
           echo "${SERVER_SSH_KEY}" > key.pem
           chmod 600 key.pem
-          ssh -o StrictHostKeyChecking=no -i key.pem ${SERVER_USER}@${SERVER_IP} "cd /var/www/game-ratings.sapphirix.ch/game-ranking && npm install && npm install tsx --save && pm2 delete game-backend || true && pm2 start server.ts --name game-backend --interpreter node --interpreter-args '-r tsx/register' --max-memory-restart 200M --restart-delay=3000"
+          ssh -o StrictHostKeyChecking=no -i key.pem ${SERVER_USER}@${SERVER_IP} "cd /var/www/game-ratings.sapphirix.ch/game-ranking && npm install && pm2 delete game-backend || true && pm2 start --name game-backend 'npx tsx server.ts'"
