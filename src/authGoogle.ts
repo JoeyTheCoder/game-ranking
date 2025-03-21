@@ -8,18 +8,24 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // File paths
-const CREDENTIALS_PATH = path.join(process.cwd(), "credentials.json");
 const TOKEN_PATH = path.join(process.cwd(), "token.json");
 
-// OAuth2 client setup
+// OAuth2 client setup from environment variables
 const oAuth2Client = (() => {
     try {
-        const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, "utf8"));
-        const { client_secret, client_id, redirect_uris } = credentials.installed || credentials.web;
-        return new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+        // Get credentials from environment variables
+        const client_id = process.env.GOOGLE_CLIENT_ID;
+        const client_secret = process.env.GOOGLE_CLIENT_SECRET;
+        const redirect_uri = process.env.GOOGLE_REDIRECT_URI || "urn:ietf:wg:oauth:2.0:oob";
+        
+        if (!client_id || !client_secret) {
+            throw new Error("Missing required environment variables: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET");
+        }
+        
+        return new google.auth.OAuth2(client_id, client_secret, redirect_uri);
     } catch (error) {
-        console.error("❌ Error loading client credentials:", error);
-        throw new Error("Failed to create OAuth2 client. Check your credentials.json file.");
+        console.error("❌ Error creating OAuth2 client:", error);
+        throw new Error("Failed to create OAuth2 client. Check your environment variables.");
     }
 })();
 
