@@ -52,10 +52,10 @@ export default async function authenticate() {
         }
         
         return oAuth2Client;
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("❌ Authentication error:", error);
         // If refresh token is invalid, start a new auth flow
-        if (error.message?.includes("invalid_grant")) {
+        if (error instanceof Error && error.message?.includes("invalid_grant")) {
             console.log("🔄 Invalid refresh token, starting new authentication...");
             return getNewToken();
         }
