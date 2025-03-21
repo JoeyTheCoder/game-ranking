@@ -5,17 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Rankings</title>
     <link rel="stylesheet" href="/src/style.css">
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-900 text-white flex flex-col min-h-screen">
     <!-- Navbar -->
     <nav class="bg-gray-800 py-4 shadow-md">
-        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
-            <a href="#" class="text-xl font-bold text-white">Game Ratings</a>
-            <ul class="flex space-x-4">
-                <li><a href="#" class="text-gray-300 hover:text-white">aRogueOne Rankings</a></li>
-                <li><a href="pages/ranked.html" class="text-gray-300 hover:text-white">Sapphirix Rankings</a></li>
-                <li><a href="#" class="text-gray-300 hover:text-white">About</a></li>
-                <li><a href="#" class="text-gray-300 hover:text-white">Support</a></li>
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+            <a href="#" class="text-xl font-bold text-white mb-4 md:mb-0">Game Ratings</a>
+            <ul class="flex flex-wrap space-x-4">
+                <li><a href="#" class="text-gray-300 hover:text-white transition-colors duration-200">aRogueOne Rankings</a></li>
+                <li><a href="pages/ranked.html" class="text-gray-300 hover:text-white transition-colors duration-200">Sapphirix Rankings</a></li>
+                <li><a href="#" class="text-gray-300 hover:text-white transition-colors duration-200">About</a></li>
+                <li><a href="#" class="text-gray-300 hover:text-white transition-colors duration-200">Support</a></li>
             </ul>
         </div>
     </nav>
@@ -24,21 +26,38 @@
     <main class="flex-1">
         <div class="max-w-6xl mx-auto p-6">
             <h1 class="text-3xl font-bold text-center mb-6">Game Ratings by aRogueOne</h1>
-            <div class="overflow-x-auto bg-gray-800 shadow-lg rounded-lg p-4">
-                <table class="w-full text-white border border-gray-700">
-                    <thead>
-                        <tr class="bg-gray-900 text-gray-300 text-left">
-                            <th class="p-3">Title</th>
-                            <th class="p-3">Platform</th>
-                            <th class="p-3 hidden md:table-cell">Release</th>
-                            <th class="p-3">Rating</th>
-                            <th class="p-3 hidden md:table-cell">Beaten</th>
-                            <th class="p-3 hidden md:table-cell">Completion</th>
-                            <th class="p-3">Comments</th>
-                        </tr>
-                    </thead>
-                    <tbody id="gameTableBody"></tbody>
-                </table>
+            
+            <!-- Search & Filter Bar -->
+            <div class="bg-gray-800 rounded-t-lg p-4 mb-0 flex flex-col md:flex-row gap-3 justify-between items-center">
+                <div class="relative w-full md:w-64">
+                    <input type="text" id="searchGames" placeholder="Search games..." 
+                           class="bg-gray-700 text-white rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+                <div class="flex gap-3 w-full md:w-auto">
+                    <select id="platformFilter" class="bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Platforms</option>
+                        <!-- Will be populated dynamically -->
+                    </select>
+                    <select id="ratingFilter" class="bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Ratings</option>
+                        <option value="9">9+</option>
+                        <option value="8">8+</option>
+                        <option value="7">7+</option>
+                        <option value="6">6+</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Games List with Modern Styling -->
+            <div class="bg-gray-800 shadow-lg rounded-b-lg overflow-hidden">
+                <div id="gamesList" class="divide-y divide-gray-700">
+                    <!-- Game items will be inserted here by JavaScript -->
+                    <div class="text-center p-8 text-gray-400">
+                        <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
+                        <p>Loading games...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -49,6 +68,67 @@
             <p>&copy; 2025 Game Rankings. All Rights Reserved.</p>
         </div>
     </footer>
+
+    <!-- Game Item Template -->
+    <template id="gameItemTemplate">
+        <div class="game-item">
+            <div class="game-header p-4 cursor-pointer hover:bg-gray-750 transition-colors flex items-center">
+                <div class="flex-1">
+                    <h3 class="game-title font-bold text-lg"></h3>
+                    <div class="flex items-center mt-1">
+                        <span class="game-platform text-sm bg-gray-700 rounded-md px-2 py-1 mr-2"></span>
+                        <span class="game-release text-sm text-gray-400"></span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="rating-container">
+                        <span class="game-rating text-xl font-bold"></span>
+                        <div class="rating-bar w-16 h-2 bg-gray-700 rounded-full mt-1">
+                            <div class="rating-fill h-full rounded-full"></div>
+                        </div>
+                    </div>
+                    <button class="expand-btn text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="game-details bg-gray-750 p-4 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Scores Section -->
+                    <div class="scores">
+                        <h4 class="font-bold text-md mb-3 text-gray-300">Scores</h4>
+                        <div class="space-y-3">
+                            <!-- Score items will be added here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Completion Section -->
+                    <div class="completion">
+                        <h4 class="font-bold text-md mb-3 text-gray-300">Completion</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="flex items-center">
+                                <span class="text-sm mr-2">Beaten:</span>
+                                <span class="game-beaten"></span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-sm mr-2">Completion:</span>
+                                <span class="game-completion text-sm"></span>
+                            </div>
+                            <div class="completion-platforms col-span-2 mt-1">
+                                <!-- Platform completion icons -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    <div class="comments lg:col-span-3 md:col-span-2">
+                        <h4 class="font-bold text-md mb-2 text-gray-300">Comments</h4>
+                        <p class="game-comments text-sm text-gray-300"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 
     <script type="module" src="/src/main.ts"></script>
 </body>

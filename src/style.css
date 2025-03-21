@@ -5,6 +5,45 @@ body {
     font-family: 'Arial', sans-serif;
 }
 
+/* Expanded background color between gray-800 and gray-900 */
+.bg-gray-750 {
+    background-color: #2a3341;
+}
+
+/* Animation for expansion */
+.game-details {
+    transition: all 0.3s ease;
+}
+
+/* Score bars hover effect */
+.score-item:hover .h-full {
+    opacity: 0.8;
+}
+
+/* Platform icons hover effect */
+.completion-platforms i {
+    transition: transform 0.2s ease;
+}
+
+.completion-platforms i:hover {
+    transform: scale(1.2);
+}
+
+/* Responsive layout adjustments */
+@media (max-width: 768px) {
+    .game-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .game-header > div:last-child {
+        margin-top: 0.75rem;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+}
+
 /* Table Styling */
 table {
     border-collapse: collapse;
