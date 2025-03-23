@@ -9,14 +9,11 @@ async function fetchSheetData() {
 
     try {
         console.log("🔹 Authenticating with Google API...");
-        const auth = await authenticate(); // This returns an unknown type
+        const auth = await authenticate();
 
-        if (!(auth instanceof google.auth.OAuth2)) {
-            throw new Error("Invalid authentication client.");
-        }
-
+        // Create a sheets API instance with the auth client
         console.log("✅ Authentication successful, creating Sheets API instance...");
-        const sheets: sheets_v4.Sheets = google.sheets({ version: "v4", auth }); // ✅ Fix: Explicitly define type
+        const sheets = google.sheets({ version: "v4", auth });
 
         console.log(`🔹 Fetching data from Google Sheets: ${SHEET_NAME}`);
         const response = await sheets.spreadsheets.values.get({

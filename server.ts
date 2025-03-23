@@ -10,6 +10,11 @@ import * as path from "path";
 const app = express();
 const PORT = 3014;
 
+// Add this near the top of your server.ts file
+const TOKEN_PATH = path.join(process.cwd(), "token.json");
+const SERVICE_ACCOUNT_PATH = path.join(process.cwd(), "service-account-key.json");
+const useServiceAccount = fs.existsSync(SERVICE_ACCOUNT_PATH);
+
 // Enable CORS for frontend access
 app.use(cors());
 
