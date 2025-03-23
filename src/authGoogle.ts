@@ -39,9 +39,9 @@ const oAuth2Client = (() => {
 export default async function authenticate() {
     console.log("🔹 Authentication process starting...");
     
-    try {
-        // If we have a service account key, use it (preferred)
-        if (useServiceAccount) {
+    // ALWAYS prioritize service account if the file exists
+    if (useServiceAccount) {
+        try {
             console.log("🔹 Using service account authentication...");
             const auth = new google.auth.GoogleAuth({
                 keyFile: SERVICE_ACCOUNT_PATH,
@@ -49,8 +49,16 @@ export default async function authenticate() {
             });
             console.log("✅ Service account authentication successful");
             return auth;
+        } catch (error) {
+            console.error("❌ Service account authentication failed:", error);
+            // Only fall back to OAuth if service account fails
+            console.log("⚠️ Falling back to OAuth authentication...");
         }
-        
+    }
+    
+    // Rest of your existing OAuth2 flow code...
+    // This will only run if service account authentication failed or doesn't exist
+    try {
         // Otherwise, fall back to OAuth2 flow
         if (fs.existsSync(TOKEN_PATH)) {
             console.log("🔹 Loading saved token...");
