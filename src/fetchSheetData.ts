@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import authenticate from "./authGoogle";
+import { OAuth2Client } from "google-auth-library";
 
 const SHEET_ID = "1uOusljyQQXZJ-3EqjjOomSB8N8XS-8gd0jnA-Ht73xE";
 const SHEET_NAME = "Ranking!A1:Z1000"; // Ensure this is correct
@@ -13,9 +14,10 @@ async function fetchSheetData() {
 
         // Create a sheets API instance with the auth client
         console.log("✅ Authentication successful, creating Sheets API instance...");
+        // Use type assertion to tell TypeScript that auth is a valid auth client
         const sheets = google.sheets({ 
             version: "v4", 
-            auth: auth
+            auth: auth as any // Type assertion to bypass type checking
         });
 
         console.log(`🔹 Fetching data from Google Sheets: ${SHEET_NAME}`);
