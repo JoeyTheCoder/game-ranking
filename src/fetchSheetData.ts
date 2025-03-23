@@ -1,4 +1,4 @@
-import { google, sheets_v4 } from "googleapis";
+import { google } from "googleapis";
 import authenticate from "./authGoogle";
 
 const SHEET_ID = "1uOusljyQQXZJ-3EqjjOomSB8N8XS-8gd0jnA-Ht73xE";
@@ -13,7 +13,10 @@ async function fetchSheetData() {
 
         // Create a sheets API instance with the auth client
         console.log("✅ Authentication successful, creating Sheets API instance...");
-        const sheets = google.sheets({ version: "v4", auth });
+        const sheets = google.sheets({ 
+            version: "v4", 
+            auth: auth
+        });
 
         console.log(`🔹 Fetching data from Google Sheets: ${SHEET_NAME}`);
         const response = await sheets.spreadsheets.values.get({
