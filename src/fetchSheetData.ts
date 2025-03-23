@@ -1,6 +1,5 @@
 import { google } from "googleapis";
 import authenticate from "./authGoogle";
-import { OAuth2Client } from "google-auth-library";
 
 const SHEET_ID = "1uOusljyQQXZJ-3EqjjOomSB8N8XS-8gd0jnA-Ht73xE";
 const SHEET_NAME = "Ranking!A1:Z1000"; // Ensure this is correct
