@@ -9,6 +9,10 @@ dotenv.config();
 
 // File paths
 const TOKEN_PATH = path.join(process.cwd(), "token.json");
+const SERVICE_ACCOUNT_PATH = path.join(process.cwd(), "service-account-key.json");
+
+// Check if we have service account credentials
+const useServiceAccount = fs.existsSync(SERVICE_ACCOUNT_PATH);
 
 // OAuth2 client setup from environment variables
 const oAuth2Client = (() => {
@@ -36,7 +40,18 @@ export default async function authenticate() {
     console.log("🔹 Authentication process starting...");
     
     try {
-        // Check if we have a token already
+        // If we have a service account key, use it (preferred)
+        if (useServiceAccount) {
+            console.log("🔹 Using service account authentication...");
+            const auth = new google.auth.GoogleAuth({
+                keyFile: SERVICE_ACCOUNT_PATH,
+                scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+            });
+            console.log("✅ Service account authentication successful");
+            return auth;
+        }
+        
+        // Otherwise, fall back to OAuth2 flow
         if (fs.existsSync(TOKEN_PATH)) {
             console.log("🔹 Loading saved token...");
             const token = JSON.parse(fs.readFileSync(TOKEN_PATH, "utf8"));

@@ -27,6 +27,11 @@ jobs:
       - name: 🔍 Verify Build Output
         run: ls -la dist/
 
+      - name: 📄 Create Service Account Key File
+        env:
+          SERVICE_ACCOUNT_KEY: ${{ secrets.SERVICE_ACCOUNT_KEY }}
+        run: echo "$SERVICE_ACCOUNT_KEY" > service-account-key.json
+
       - name: 🚚 Deploy Files to Server
         env:
           SERVER_IP: ${{ secrets.SERVER_IP }}
@@ -35,7 +40,7 @@ jobs:
         run: |
           echo "${SERVER_SSH_KEY}" > key.pem
           chmod 600 key.pem
-          scp -o StrictHostKeyChecking=no -i key.pem -r dist src server.ts package.json package-lock.json ${SERVER_USER}@${SERVER_IP}:/var/www/game-ratings.sapphirix.ch/game-ranking
+          scp -o StrictHostKeyChecking=no -i key.pem -r dist src server.ts package.json package-lock.json service-account-key.json ${SERVER_USER}@${SERVER_IP}:/var/www/game-ratings.sapphirix.ch/game-ranking
 
       - name: 🔄 Restart Backend on Server
         env:
@@ -45,4 +50,4 @@ jobs:
         run: |
           echo "${SERVER_SSH_KEY}" > key.pem
           chmod 600 key.pem
-          ssh -o StrictHostKeyChecking=no -i key.pem ${SERVER_USER}@${SERVER_IP} "cd /var/www/game-ratings.sapphirix.ch/game-ranking && npm install && sudo chown -R ${SERVER_USER}:${SERVER_USER} . && pm2 delete game-backend || true && pm2 start --name game-backend 'npx tsx server.ts'"
+          ssh -o StrictHostKeyChecking=no -i key.pem ${SERVER_USER}@${SERVER_IP} "cd /var/www/game-ratings.sapphirix.ch/game-ranking && npm install && sudo chown -R ${SERVER_USER}:${SERVER_USER} . && pm2 delete game-backend || true && pm2 start --name game-backend 'npx tsx server.ts' && pm2 delete game-watchdog || true && pm2 start --name game-watchdog watchdog.js"
